@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from warnings import warn
 
 
 Cursor = tuple[int, int]
@@ -19,70 +20,80 @@ Allocation = dict[Cursor, int]
 
 @dataclass
 class Unallocated:
-    needs: list[int]
-    supplies: list[int]
-
-
-def id_unallocated(unallocated: Unallocated) -> str:
-    match unallocated:
-        case Unallocated(
-            needs=[],
-            supplies=[],
-        ):
-            return "perfect match"
-
-        case Unallocated(
-            needs=[],
-            supplies=[*supplies]
-        ):
-            return "no need"
-
-        case Unallocated(
-            needs=[*needs],
-            supplies=[],
-        ):
-            return "no supply"
-
-        case Unallocated(
-            needs=[*needs],
-            supplies=[*supplies]
-        ):
-            return "continue"
-
-        case _:
-            raise ValueError("Input must be type Unallocated")
+    needs: list[int] = field(default_factory=list)
+    supplies: list[int] = field(default_factory=list)
 
 
 @dataclass
 class Allocating:
-    remaining: Unallocated
+    remaining: Unallocated = field(default_factory=Unallocated)
+    cursor: Cursor = (0, 0)
     allocation: Allocation = field(default_factory=dict)
 
 
-def allocate(current: Allocating, cursor = (0,0)) -> Allocating:
-    n, *needs  = current.remaining.needs
+def allocation_step(current: Allocating) -> Allocating:
+    n, *needs = current.remaining.needs
     s, *supplies = current.remaining.supplies
 
-# Case x is zero & xs is empty
-# Case x is zero & xs
-# Case y is zero & ys is empty
-# Case y is zero & ys
-# Case both are zero & both
-# Case both are zero & x
-# Case both are zero & y
-# Case both are zero & neither
+    if n > s:
+        return Allocating(
+            cursor=down(current.cursor),
+            remaining=Unallocated(
+                needs=[n - s] + needs,
+                supplies=supplies,
+            ),
+            allocation={
+                current.cursor: s,
+                **current.allocation,
+            }
+        )
 
-un = Unallocated(
-    needs=[1,2,3],
-    supplies=[1,2,3]
-)
+    if n < s:
+        return Allocating(
+            cursor=right(current.cursor),
+            remaining=Unallocated(
+                needs=needs,
+                supplies=[s - n] + supplies,
+            ),
+            allocation={
+                current.cursor: n,
+                **current.allocation,
+            }
+        )
+
+    return Allocating(
+        cursor=down(right(current.cursor)),
+        remaining=Unallocated(
+            needs=needs,
+            supplies=supplies,
+        ),
+        allocation={
+            current.cursor: n,
+            **current.allocation,
+        }
+    )
 
 
+def _allocate(current: Allocating) -> Allocation:
+    match current.remaining:
+        case (Unallocated(needs=[], supplies=[]) 
+              | Unallocated(needs=[], supplies=[*_])):
+            return current.allocation
 
-# place the minimum at the location
-# subtract the minimum from the other
-# pop the next from the min list
+        case Unallocated(needs=[*_], supplies=[]):
+            warn("This allocation doesn't cover all the need")
+            return current.allocation
 
-# What am I struggling with? Testing for the minimum appropriately.
+        case Unallocated(needs=[*_], supplies=[*_]):
+            return _allocate(allocation_step(current))
 
-print(id_unallocated(un))
+        case _:
+            raise ValueError("Input must be type Unallocated")
+
+def allocate(a: list, b: list) -> dict[Cursor, int]:
+    return _allocate(Allocating(remaining=Unallocated(needs=a, supplies=b)))
+
+if __name__ == "__main__":
+    allocation = allocate([8, 16, 6], [10, 10, 10])
+    print(allocation)
+
