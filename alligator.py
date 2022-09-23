@@ -1,15 +1,67 @@
 from dataclasses import dataclass, field
-import warnings
 
 
-def down(pos: tuple[int, int]) -> tuple[int, int]:
+Cursor = tuple[int, int]
+
+
+def down(pos: Cursor) -> Cursor:
     one, two = pos
     return (one + 1, two)
 
 
-def right(pos: tuple[int, int]) -> tuple[int, int]:
+def right(pos: Cursor) -> Cursor:
     one, two = pos
     return (one, two + 1)
+
+
+Allocation = dict[Cursor, int]
+
+
+@dataclass
+class Unallocated:
+    needs: list[int]
+    supplies: list[int]
+
+
+def id_unallocated(unallocated: Unallocated) -> str:
+    match unallocated:
+        case Unallocated(
+            needs=[],
+            supplies=[],
+        ):
+            return "perfect match"
+
+        case Unallocated(
+            needs=[],
+            supplies=[*supplies]
+        ):
+            return "no need"
+
+        case Unallocated(
+            needs=[*needs],
+            supplies=[],
+        ):
+            return "no supply"
+
+        case Unallocated(
+            needs=[*needs],
+            supplies=[*supplies]
+        ):
+            return "continue"
+
+        case _:
+            raise ValueError("Input must be type Unallocated")
+
+
+@dataclass
+class Allocating:
+    remaining: Unallocated
+    allocation: Allocation = field(default_factory=dict)
+
+
+def allocate(current: Allocating, cursor = (0,0)) -> Allocating:
+    n, *needs  = current.remaining.needs
+    s, *supplies = current.remaining.supplies
 
 # Case x is zero & xs is empty
 # Case x is zero & xs
@@ -20,23 +72,11 @@ def right(pos: tuple[int, int]) -> tuple[int, int]:
 # Case both are zero & y
 # Case both are zero & neither
 
-def pop(xs: list):
-    match xs:
-        case []:
-            print("empty")
-        case [x]:
-            print("only", x)
-        case [x, *xs]:
-            print(x, "plus", xs)
+un = Unallocated(
+    needs=[1,2,3],
+    supplies=[1,2,3]
+)
 
-
-def allocate(
-    needs: list[int], supplies: list[int], location: tuple[int, int]
-) -> dict[tuple[int, int], int]:
-    n, *ns = needs
-    s, *ses = supplies
-
-    return {(0, 0): 0}
 
 
 # place the minimum at the location
@@ -44,6 +84,5 @@ def allocate(
 # pop the next from the min list
 
 # What am I struggling with? Testing for the minimum appropriately.
-pop([])
-pop([1,2,3])
-pop([3])
+
+print(id_unallocated(un))
