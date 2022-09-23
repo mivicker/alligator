@@ -48,7 +48,7 @@ def allocation_step(current: Allocating) -> Allocating:
             }
         )
 
-    if n < s:
+    elif n < s:
         return Allocating(
             cursor=right(current.cursor),
             remaining=Unallocated(
