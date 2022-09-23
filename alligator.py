@@ -90,8 +90,10 @@ def _allocate(current: Allocating) -> Allocation:
         case _:
             raise ValueError("Input must be type Unallocated")
 
-def allocate(a: list, b: list) -> dict[Cursor, int]:
+
+def allocate(a: list[int], b: list[int]) -> dict[Cursor, int]:
     return _allocate(Allocating(remaining=Unallocated(needs=a, supplies=b)))
+
 
 if __name__ == "__main__":
     allocation = allocate([8, 16, 6], [10, 10, 10])
