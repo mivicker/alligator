@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import List, Tuple
 from dataclasses import dataclass, field
 import warnings
 
@@ -96,3 +96,12 @@ class Allocation:
             result[row][col] = quantity
 
         return result
+
+def allocate(a:List[int], b:List[int]) -> List[List[int]]:
+    return Allocation(
+        needs=a,
+        supplies=b
+    ).as_matrix()
+
+if __name__ == "__main__":
+    print(allocate([1,2,3], [3,2,1]))
